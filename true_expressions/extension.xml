@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root version="3.3" release="1.0">
+    <announcement text="True expressions extension in use" />
+    <properties>
+        <name>TrueExpressions</name>
+        <version>0.1</version>
+        <author>Me</author>
+        <description>Improving expression calculation by reading character data as real numbers</description>
+    </properties>
+    <base>
+        <script name="true_expressions" file="scripts/true_expressions.lua" />
+    </base>
+</root>
