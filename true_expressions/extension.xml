@@ -9,5 +9,6 @@
     </properties>
     <base>
         <script name="true_expressions" file="scripts/true_expressions.lua" />
+        <script name="dice_parser" file="scripts/dice_parser.lua" />
     </base>
 </root>
