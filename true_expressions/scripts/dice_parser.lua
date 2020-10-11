@@ -26,9 +26,10 @@ PARSER_TOKEN_CEIL = 13
 PARSER_TOKEN_COS = 14
 PARSER_TOKEN_EOF = 15
 
-function make_token(kind, val)
+function make_token(kind, location, val)
     local t = {};
     t.kind = kind;
+    t.location = location;
     t.val = val
     return t;
 end
@@ -55,11 +56,6 @@ function token_kind_string(kind)
     return table[kind]
 end
 
-function string_char(string, index)
-    local fake_lua_index = index + 1
-    return string:sub(fake_lua_index, fake_lua_index)
-end
-
 function is_digit(char)
     assert(char:len() == 1)
     return char:match("%d") ~= nil
@@ -71,78 +67,79 @@ function is_alpha(char)
 end
 
 function make_lexer(stream)
-    local i = 0
+    local i = 1
     local function next_token()
         local stream_end = stream:len()
-        while i < stream_end do
-            while string_char(stream, i) == " " do
+        while i <= stream_end do
+            while stream:sub(i, i) == " " do
                 i = i + 1
                 if i >= stream_end then
-                    return make_token(PARSER_TOKEN_EOF)
+                    return make_token(PARSER_TOKEN_EOF, i)
                 end
             end
 
-            local c = string_char(stream, i)
+            local c = stream:sub(i, i)
+            local token_start = i
 
             if is_digit(c) then
                 local zero_charcode = string.byte("0")
                 local val = 0
-                while i < stream_end and is_digit(string_char(stream, i)) do
+                while i <= stream_end and is_digit(stream:sub(i, i)) do
                     val = val * 10
-                    val = val + stream:byte(i + 1) - zero_charcode
+                    val = val + stream:byte(i) - zero_charcode
                     i = i + 1
                 end
-                local tok = make_token(PARSER_TOKEN_INT, val)
+                local tok = make_token(PARSER_TOKEN_INT, token_start, val)
                 return tok
             elseif is_alpha(c) then
-                if stream:sub(i + 1, i + 3) == "min" then
+                if stream:sub(i, i + 2) == "min" then
                     i = i + 3
-                    return make_token(PARSER_TOKEN_MIN)
-                elseif stream:sub(i + 1, i + 3) == "max" then
+                    return make_token(PARSER_TOKEN_MIN, token_start)
+                elseif stream:sub(i, i + 2) == "max" then
                     i = i + 3
-                    return make_token(PARSER_TOKEN_MAX)
-                elseif stream:sub(i + 1, i + 3) == "mul" then
+                    return make_token(PARSER_TOKEN_MAX, token_start)
+                elseif stream:sub(i, i + 2) == "mul" then
                     i = i + 3
-                    return make_token(PARSER_TOKEN_MUL)
-                elseif stream:sub(i + 1, i + 3) == "div" then
+                    return make_token(PARSER_TOKEN_MUL, token_start)
+                elseif stream:sub(i, i + 2) == "div" then
                     i = i + 3
-                    return make_token(PARSER_TOKEN_DIV)
-                elseif stream:sub(i + 1, i + 3) == "cos" then
+                    return make_token(PARSER_TOKEN_DIV, token_start)
+                elseif stream:sub(i, i + 2) == "cos" then
                     i = i + 3
-                    return make_token(PARSER_TOKEN_COS)
-                elseif stream:sub(i + 1, i + 5) == "floor" then
+                    return make_token(PARSER_TOKEN_COS, token_start)
+                elseif stream:sub(i, i + 4) == "floor" then
                     i = i + 5
-                    return make_token(PARSER_TOKEN_FLOOR)
-                elseif stream:sub(i + 1, i + 4) == "ceil" then
+                    return make_token(PARSER_TOKEN_FLOOR, token_start)
+                elseif stream:sub(i, i + 3) == "ceil" then
                     i = i + 4
-                    return make_token(PARSER_TOKEN_CEIL)
+                    return make_token(PARSER_TOKEN_CEIL, token_start)
                 elseif c == "d" then
                     i = i + 1
-                    return make_token(PARSER_TOKEN_DIE)
+                    return make_token(PARSER_TOKEN_DIE, token_start)
                 else
-                    local word_end = stream:find("[^%a]", i + 1)
-                    error("Unrecognized symbol: " .. stream:sub(i + 1, word_end - 1))
+                    local word_end = stream:find("[^%a]", i)
+                    error("Unrecognized symbol: " .. stream:sub(i, word_end - 1))
                 end
             elseif c == "(" then
                 i = i + 1
-                return make_token(PARSER_TOKEN_LEFT_BRACE)
+                return make_token(PARSER_TOKEN_LEFT_BRACE, token_start)
             elseif c == ")" then
                 i = i + 1
-                return make_token(PARSER_TOKEN_RIGHT_BRACE)
+                return make_token(PARSER_TOKEN_RIGHT_BRACE, token_start)
             elseif c == "+" then
                 i = i + 1
-                return make_token(PARSER_TOKEN_ADD)
+                return make_token(PARSER_TOKEN_ADD, token_start)
             elseif c == "-" then
                 i = i + 1
-                return make_token(PARSER_TOKEN_SUB)
+                return make_token(PARSER_TOKEN_SUB, token_start)
             elseif c == "," then
                 i = i + 1
-                return make_token(PARSER_TOKEN_COMMA)
+                return make_token(PARSER_TOKEN_COMMA, token_start)
             else
                 error("Unrecognized symbol: " .. c)
             end
         end
-        return make_token(PARSER_TOKEN_EOF)
+        return make_token(PARSER_TOKEN_EOF, i)
     end
 
     local token = next_token()
@@ -311,52 +308,73 @@ function test_lexer()
         return lexer.peek()
     end
     assert(tok.kind == PARSER_TOKEN_INT)
+    assert(tok.location == 1)
     assert(tok.val == 1)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_DIE)
+    assert(tok.location == 2)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_INT)
+    assert(tok.location == 3)
     assert(tok.val == 20)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_ADD)
+    assert(tok.location == 5)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_MUL)
+    assert(tok.location == 6)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_LEFT_BRACE)
+    assert(tok.location == 9)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_INT)
+    assert(tok.location == 10)
     assert(tok.val == 1)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_COMMA)
+    assert(tok.location == 11)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_INT)
+    assert(tok.location == 13)
     assert(tok.val == 1)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_RIGHT_BRACE)
+    assert(tok.location == 14)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_SUB)
+    assert(tok.location == 15)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_FLOOR)
+    assert(tok.location == 16)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_LEFT_BRACE)
+    assert(tok.location == 21)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_DIV)
+    assert(tok.location == 22)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_LEFT_BRACE)
+    assert(tok.location == 25)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_INT)
+    assert(tok.location == 26)
     assert(tok.val == 123456789)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_COMMA)
+    assert(tok.location == 35)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_INT)
+    assert(tok.location == 37)
     assert(tok.val == 23)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_RIGHT_BRACE)
+    assert(tok.location == 39)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_RIGHT_BRACE)
+    assert(tok.location == 40)
     tok = nxt()
     assert(tok.kind == PARSER_TOKEN_EOF)
+    assert(tok.location == stream:len() + 1)
     print("Lexer tests passed")
 end
 
