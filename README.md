@@ -27,7 +27,7 @@ Supported values that can be collected are:
 * [CHA]
 
 An example:
-`Heavy Attack; ATK: 1 + [CCON]; [NAME|Character Name]`
+`Heavy Attack; ATK: 1 + [CON]; [NAME|Character Name]`
 
 Arithmetic tools are also available
 
@@ -40,7 +40,7 @@ Arithmetic tools are also available
 * ceil(x)
 
 Example:
-`Arcane Strike; ATK: 1 + div([CLVL],4); [NAME|Character Name]`
+`Arcane Strike; ATK: 1 + div([LVL],4); [NAME|Character Name]`
 
 Please note that no calculus will be perfomed unless the modifier is numerical or rollable
 
