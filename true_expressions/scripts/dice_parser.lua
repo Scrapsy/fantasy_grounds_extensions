@@ -73,7 +73,7 @@ function make_lexer(stream)
         while i <= stream_end do
             while stream:sub(i, i) == " " do
                 i = i + 1
-                if i >= stream_end then
+                if i > stream_end then
                     return make_token(PARSER_TOKEN_EOF, i)
                 end
             end
