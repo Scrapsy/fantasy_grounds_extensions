@@ -14,17 +14,34 @@ True expressions is intended to improving expression calculation by reading char
 
 In order to use this, some parts are required:
 
-When defining the action effect in the character sheet, you must define which character the data will be collected from. This is done by adding [NAME|Character name] in the expression with everything else.
+When defining the action effect in the character sheet, you must define which character the data will be collected from. This is done by adding `[NAME|Character name]` in the expression with everything else.
 
 Supported values that can be collected are:
 
-* [CLVL]
-* [CSTR]
-* [CDEX]
-* [CCON]
-* [CINT]
-* [CWIS]
-* [CCHA]
+* [LVL]
+* [STR]
+* [DEX]
+* [CON]
+* [INT]
+* [WIS]
+* [CHA]
 
 An example:
 `Heavy Attack; ATK: 1 + [CCON]; [NAME|Character Name]`
+
+Arithmetic tools are also available
+
+* min(x, y)
+* max(x, y)
+* mul(x, y)
+* div(x, y)
+* cos(x)
+* floor(x)
+* ceil(x)
+
+Example:
+`Arcane Strike; ATK: 1 + div([CLVL],4); [NAME|Character Name]`
+
+Please note that no calculus will be perfomed unless the modifier is numerical or rollable
+
+Numerical calculations will preroll dice, while rollable calculations will leave this to Fantasy Grounds
