@@ -31,7 +31,7 @@ function replaceCharacterValues(sName)
     return codedLine;
 end
 
-function hasValue (tab, val)
+function hasValue(tab, val)
     for index, value in ipairs(tab) do
         if value == val then
             return true;
@@ -102,6 +102,7 @@ function splitAndEvaluate(sName)
 end
 
 function onEffectTextAddStart(rEffect)
+    EffectManager35E.onEffectAddStart(rEffect);
     Debug.console("Original: ", rEffect.sName);
     rEffect.sName = replaceCharacterValues(rEffect.sName);
     Debug.console("Replaced: ", rEffect.sName);
